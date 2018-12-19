@@ -1,6 +1,9 @@
 import re
 import helper as hlp
 import testcase as tc
+import pygraphviz as pgv
+# Graph.add_node(2,label = 'temp')
+
 class parser():
 
     def __init__(self):
@@ -8,6 +11,11 @@ class parser():
         self.types = tc.types
         self.t_index = 0
         self.current_token = self.tokens[self.t_index]
+        self.graph = pgv.AGraph()
+        self.graph.add_node('m')
+
+    def drow(self):
+        self.graph.draw('file1.png',prog='dot')     
     
     def factor(self):
         if(self.current_token == '('):
@@ -20,14 +28,18 @@ class parser():
         elif(hlp.is_num(self.current_token)):
             print(self.types[self.t_index], self.current_token)
             self.match(self.current_token)
+            self.graph.add_node(self.current_token)
+            return self.graph.get_node(self.current_token)
 
         elif(self.is_identifier()):
             print(self.types[self.t_index], self.current_token)
             self.match(self.current_token)
+            self.graph.add_node(self.current_token)
+            return self.graph.get_node(self.current_token)
             
             
     def expression(self):
-        self.term()
+        child = self.term()
         while self.is_addOp():
             print(self.types[self.t_index], self.current_token)
             self.match(self.current_token)
@@ -115,12 +127,12 @@ class parser():
 
         
     def term(self):
-        self.factor()
+        child = self.factor()
         while self.is_mulOp():
             print(self.types[self.t_index], self.current_token)
             self.match(self.current_token)
             self.factor()
-
+        return child
     
     def writeStmnt(self):
         print(self.types[self.t_index], self.current_token)
