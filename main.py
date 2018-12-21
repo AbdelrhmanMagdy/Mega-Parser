@@ -2,7 +2,8 @@ from parser import parser
 from scanner import scanner
 
 def main():
-    s = scanner('sample_input.txt')
+    file_name = sys.argv[1] if len(sys.argv)>1 else 'sample_input.txt'
+    s = scanner(file_name)
     tokens, types = s.arrOut()
     p = parser(tokens, types)
     p.drow()

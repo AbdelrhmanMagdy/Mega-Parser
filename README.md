@@ -2,15 +2,23 @@
 Parse Tree for TINY Language.
 
 ## How to run:
-clone the repo
-pip3 install -r requirements.txt
-python3 main.py
+### Executable
+- Clone the repo
+- Go to dist folder
+- Place your Tiny syntax in sample_input.txt filr
+- Double click on main file
+- Find and click output.png
+
+### Source code
+- clone the repo
+- pip3 install -r requirements.txt
+- python3 main.py
 
 ## Input:
-Place your Tiny syntax in sample_input.txt file
+- Place your Tiny syntax in sample_input.txt file
 
 ## Output:
-output.png
+- output.png
 
 ## Examples:
 

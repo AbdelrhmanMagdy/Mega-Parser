@@ -19,15 +19,12 @@ class parser():
     
     def factor(self):
         if(self.current_token == '('):
-            print(self.types[self.t_index], self.current_token)
             self.match('(')
             temp = self.simpleExp()
-            print(self.types[self.t_index], self.current_token)
             self.match(')')
             return temp
         
         elif(hlp.is_num(self.current_token) or self.is_identifier()):
-            print(self.types[self.t_index], self.current_token)
             parent = self.tree()
             self.match(self.current_token)
             return parent
@@ -35,7 +32,6 @@ class parser():
     def term(self):
         temp = self.factor()
         while self.is_mulOp():
-            print(self.types[self.t_index], self.current_token)
             parent = self.tree()
             self.match(self.current_token)
             leftChild = temp
@@ -48,7 +44,6 @@ class parser():
         temp = self.term()
         while self.is_addOp():
             parent = self.tree()
-            print(self.types[self.t_index], self.current_token)
             self.match(self.current_token)
             leftChild = temp
             rightChild = self.term()
@@ -60,7 +55,6 @@ class parser():
         temp = self.statement() 
         nativeChild = temp
         while self.is_semi_column():
-            print(self.types[self.t_index], self.current_token)
             self.match(self.current_token)
             leftChild = temp
             rightChild = self.statement()
@@ -81,24 +75,18 @@ class parser():
             return self.write_stmt()
 
     def if_stmt(self):
-        print(self.types[self.t_index], self.current_token)
         parent = self.tree()
         self.match('if')
         leftChild = self.exp()
-        print(self.types[self.t_index], self.current_token)
         self.match('then')
         middleChild = self.stmt_seq()
         if self.current_token == 'end':
-            print(self.types[self.t_index], self.current_token)
             self.edge(parent, leftChild, middleChild)
             self.connectHorizontal(leftChild, middleChild, color='white')
             self.match('end')
         elif self.current_token == 'else':
-            # print('else')
-            print(self.types[self.t_index], self.current_token)
             self.match('else')
             rightChild = self.stmt_seq()
-            print(self.types[self.t_index], self.current_token)
             self.edge(parent, leftChild)
             self.edge(parent, middleChild, rightChild)
             self.connectHorizontal(leftChild, middleChild, color='white')
@@ -107,38 +95,30 @@ class parser():
         return parent
     
     def repeat_stmt(self):
-        print(self.types[self.t_index], self.current_token)
         parent = self.tree()
         self.match('repeat')
         leftChild = self.stmt_seq()
-        print(self.types[self.t_index], self.current_token)
-        print(self.current_token)
         self.match('until')
         rightChild = self.exp()
         self.edge(parent, leftChild, rightChild)
         return parent
 
     def assign_stmt(self):
-        print(self.types[self.t_index], self.current_token)
         parent = self.tree()
         self.match(self.current_token)
-        print(self.types[self.t_index], self.current_token)
         self.match(':=')
         child = self.exp()
         self.edge(parent, child)
         return parent
 
     def read_stmt(self):
-        print(self.types[self.t_index], self.current_token)
         self.match('read')
-        print(self.types[self.t_index], self.current_token)
         label = 'READ \n'+ self.current_token
         parent = self.tree(label)
         self.match(self.current_token)
         return parent
 
     def write_stmt(self):
-        print(self.types[self.t_index], self.current_token)
         parent = self.tree()
         self.match('write')
         child = self.exp()
@@ -151,7 +131,6 @@ class parser():
     def exp(self):
         temp = self.simpleExp()
         if self.is_comparisonOp():
-            print(self.types[self.t_index], self.current_token)
             parent = self.tree()
             self.match(self.current_token)
             leftChild = temp
@@ -196,7 +175,6 @@ class parser():
     
     def is_addOp(self):
         return True if self.current_token == '+' or self.current_token == '-' else  False
-        print(self.current_token)
     def is_mulOp(self):
         return True if self.current_token == '*' or self.current_token == '/' else  False
     def is_comparisonOp(self):
