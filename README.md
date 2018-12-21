@@ -2,6 +2,7 @@
 Parse Tree for TINY Language.
 
 ## How to run:
+###environment: Linux
 ### Executable
 - Clone the repo
 - Go to dist folder
