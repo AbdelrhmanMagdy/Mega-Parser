@@ -1,5 +1,6 @@
 from parser import parser
 from scanner import scanner
+import sys
 
 def main():
     file_name = sys.argv[1] if len(sys.argv)>1 else 'sample_input.txt'

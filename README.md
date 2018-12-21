@@ -43,7 +43,7 @@ else
 end;
 write z
 ```
-![alt parse tree](https://i.ibb.co/WpG4K37/Screenshot-from-2018-12-21-21-04-26.png)
+![alt parse tree](https://i.ibb.co/cNwjm0B/output.png)
 ```
 read x; {input an integer }
 if 0 < x then { don’t compute if x <= 0 }
