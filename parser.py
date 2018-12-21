@@ -58,13 +58,15 @@ class parser():
 
     def stmt_seq(self):
         temp = self.statement() 
+        nativeChild = temp
         while self.is_semi_column():
             print(self.types[self.t_index], self.current_token)
             self.match(self.current_token)
             leftChild = temp
             rightChild = self.statement()
             self.connectHorizontal(leftChild, rightChild)
-        return temp
+            temp = rightChild
+        return nativeChild
 
     def statement(self):
         if self.current_token == 'if':
@@ -89,6 +91,7 @@ class parser():
         if self.current_token == 'end':
             print(self.types[self.t_index], self.current_token)
             self.edge(parent, leftChild, middleChild)
+            self.connectHorizontal(leftChild, middleChild, color='white')
             self.match('end')
         elif self.current_token == 'else':
             # print('else')
@@ -98,6 +101,8 @@ class parser():
             print(self.types[self.t_index], self.current_token)
             self.edge(parent, leftChild)
             self.edge(parent, middleChild, rightChild)
+            self.connectHorizontal(leftChild, middleChild, color='white')
+            self.connectHorizontal(middleChild, rightChild, color='white')
             self.match('end')
         return parent
     
@@ -125,13 +130,11 @@ class parser():
 
     def read_stmt(self):
         print(self.types[self.t_index], self.current_token)
-        parent = self.tree()
         self.match('read')
-        if self.is_identifier():
-            print(self.types[self.t_index], self.current_token)
-            child = self.tree()
-            self.graph.add_edge(parent, child)
-            self.match(self.current_token)
+        print(self.types[self.t_index], self.current_token)
+        label = 'READ \n'+ self.current_token
+        parent = self.tree(label)
+        self.match(self.current_token)
         return parent
 
     def write_stmt(self):
@@ -157,15 +160,17 @@ class parser():
             temp = parent
         return temp
         
-    def connectHorizontal(self, firstNode,secondNode):
+    def connectHorizontal(self, firstNode, secondNode, color='black'):
         self.graph.subgraph(nbunch=[firstNode,secondNode],rank= 'same')
-        self.graph.add_edge(firstNode,secondNode)
+        self.graph.add_edge(firstNode,secondNode, color=color)
     
-    def tree(self):
-        if self.types[self.t_index] in self.nonTerminals:
-            self.graph.add_node(self.id, label=self.current_token, shape='rectangle')
+    def tree(self, label=''):
+        if not label:
+            label = self.current_token
+        if label.__contains__('READ') or self.types[self.t_index] in self.nonTerminals:
+            self.graph.add_node(self.id, label=label, shape='rectangle')
         else:
-            self.graph.add_node(self.id, label=self.current_token)
+            self.graph.add_node(self.id, label=label)
         temp = self.graph.get_node(self.id)
         self.id += 1
         return temp
