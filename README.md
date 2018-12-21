@@ -19,6 +19,21 @@ X:=2;
 y:=3;
 z:=5;
 a:=x+y+z;
+if z<8 then
+    repeat
+    a:=a*2;
+    z:=z-1
+    until z=0;
+    write a
+else
+    read b;
+    if b = 1 then
+        write b*(x+y)
+    else
+        write a
+    end
+end;
+write z
 ```
 ![alt parse tree](https://i.ibb.co/WpG4K37/Screenshot-from-2018-12-21-21-04-26.png)
 ```
