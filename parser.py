@@ -1,170 +1,193 @@
 import re
 import helper as hlp
-import testcase as tc
 import pygraphviz as pgv
-# Graph.add_node(2,label = 'temp')
 
 class parser():
 
-    def __init__(self):
-        self.tokens = tc.tokens
-        self.types = tc.types
+    def __init__(self, tokens, types):
+        self.nonTerminals = ['READ','WRITE','IF','REPEAT']
+        self.tokens = tokens
+        self.types = types
         self.t_index = 0
         self.current_token = self.tokens[self.t_index]
         self.graph = pgv.AGraph()
-        self.graph.add_node('m')
+        self.id = 0
+        self.stmt_seq()
 
     def drow(self):
-        self.graph.draw('file1.png',prog='dot')     
+        self.graph.draw('output.png',prog='dot')     
     
     def factor(self):
         if(self.current_token == '('):
             print(self.types[self.t_index], self.current_token)
             self.match('(')
-            self.expression()
+            temp = self.simpleExp()
             print(self.types[self.t_index], self.current_token)
             self.match(')')
+            return temp
         
-        elif(hlp.is_num(self.current_token)):
+        elif(hlp.is_num(self.current_token) or self.is_identifier()):
             print(self.types[self.t_index], self.current_token)
+            parent = self.tree()
             self.match(self.current_token)
-            self.graph.add_node(self.current_token)
-            return self.graph.get_node(self.current_token)
+            return parent
+            
+    def term(self):
+        temp = self.factor()
+        while self.is_mulOp():
+            print(self.types[self.t_index], self.current_token)
+            parent = self.tree()
+            self.match(self.current_token)
+            leftChild = temp
+            rightChild = self.factor()
+            self.edge(parent, leftChild, rightChild)
+            temp = parent
+        return temp
 
-        elif(self.is_identifier()):
-            print(self.types[self.t_index], self.current_token)
-            self.match(self.current_token)
-            self.graph.add_node(self.current_token)
-            return self.graph.get_node(self.current_token)
-            
-            
-    def expression(self):
-        child = self.term()
+    def simpleExp(self):
+        temp = self.term()
         while self.is_addOp():
+            parent = self.tree()
             print(self.types[self.t_index], self.current_token)
             self.match(self.current_token)
-            self.term()
-
-    def program(self):
-        self.stmt_seq()
+            leftChild = temp
+            rightChild = self.term()
+            self.edge(parent, leftChild, rightChild)
+            temp = parent
+        return temp
 
     def stmt_seq(self):
-        self.statement()    
+        temp = self.statement() 
         while self.is_semi_column():
             print(self.types[self.t_index], self.current_token)
             self.match(self.current_token)
-            self.statement()
+            leftChild = temp
+            rightChild = self.statement()
+            self.connectHorizontal(leftChild, rightChild)
+        return temp
 
     def statement(self):
         if self.current_token == 'if':
-            self.if_stmt()
+            return self.if_stmt()
         elif self.is_identifier():
-            self.assign_stmt()
+            return self.assign_stmt()
         elif self.current_token == 'repeat':
-            self.repeat_stmt()
+            return self.repeat_stmt()
         elif self.current_token == 'read':
-            self.read_stmt()
+            return self.read_stmt()
         else:
-            self.write_stmt()
+            return self.write_stmt()
 
     def if_stmt(self):
         print(self.types[self.t_index], self.current_token)
+        parent = self.tree()
         self.match('if')
-        self.bigExpression()
+        leftChild = self.exp()
         print(self.types[self.t_index], self.current_token)
         self.match('then')
-        self.stmt_seq()
+        middleChild = self.stmt_seq()
         if self.current_token == 'end':
-            print('End')
             print(self.types[self.t_index], self.current_token)
+            self.edge(parent, leftChild, middleChild)
             self.match('end')
         elif self.current_token == 'else':
-            print('else')
+            # print('else')
             print(self.types[self.t_index], self.current_token)
             self.match('else')
-            self.stmt_seq()
+            rightChild = self.stmt_seq()
             print(self.types[self.t_index], self.current_token)
+            self.edge(parent, leftChild)
+            self.edge(parent, middleChild, rightChild)
             self.match('end')
-
+        return parent
     
     def repeat_stmt(self):
         print(self.types[self.t_index], self.current_token)
+        parent = self.tree()
         self.match('repeat')
-        self.stmt_seq()
+        leftChild = self.stmt_seq()
         print(self.types[self.t_index], self.current_token)
+        print(self.current_token)
         self.match('until')
-        self.bigExpression()
+        rightChild = self.exp()
+        self.edge(parent, leftChild, rightChild)
+        return parent
 
     def assign_stmt(self):
         print(self.types[self.t_index], self.current_token)
+        parent = self.tree()
         self.match(self.current_token)
         print(self.types[self.t_index], self.current_token)
         self.match(':=')
-        self.bigExpression()
+        child = self.exp()
+        self.edge(parent, child)
+        return parent
 
     def read_stmt(self):
         print(self.types[self.t_index], self.current_token)
+        parent = self.tree()
         self.match('read')
         if self.is_identifier():
             print(self.types[self.t_index], self.current_token)
+            child = self.tree()
+            self.graph.add_edge(parent, child)
             self.match(self.current_token)
+        return parent
 
-    
     def write_stmt(self):
         print(self.types[self.t_index], self.current_token)
+        parent = self.tree()
         self.match('write')
-        self.bigExpression()
+        child = self.exp()
+        self.edge(parent, child)
+        return parent
         
 
 
 
-    def bigExpression(self):
-        self.expression()
+    def exp(self):
+        temp = self.simpleExp()
         if self.is_comparisonOp():
             print(self.types[self.t_index], self.current_token)
+            parent = self.tree()
             self.match(self.current_token)
-            self.expression()
-
+            leftChild = temp
+            rightChild = self.simpleExp()
+            self.edge(parent, leftChild, rightChild)
+            temp = parent
+        return temp
         
-    def term(self):
-        child = self.factor()
-        while self.is_mulOp():
-            print(self.types[self.t_index], self.current_token)
-            self.match(self.current_token)
-            self.factor()
-        return child
+    def connectHorizontal(self, firstNode,secondNode):
+        self.graph.subgraph(nbunch=[firstNode,secondNode],rank= 'same')
+        self.graph.add_edge(firstNode,secondNode)
     
-    def writeStmnt(self):
-        print(self.types[self.t_index], self.current_token)
-        self.match(self.current_token)
-        self.bigExpression()
+    def tree(self):
+        if self.types[self.t_index] in self.nonTerminals:
+            self.graph.add_node(self.id, label=self.current_token, shape='rectangle')
+        else:
+            self.graph.add_node(self.id, label=self.current_token)
+        temp = self.graph.get_node(self.id)
+        self.id += 1
+        return temp
 
-
-    # def assign():
-    #     expression()        
-    #     while (token == ':='):
-    #         None
-#def stmt(self):
-#switch(){
-
-#    }
-
+    def edge(self, parent, left, right=None):
+        self.graph.add_edge(parent, left)
+        if not right is None:
+            self.graph.add_edge(parent, right)
 
     def match(self, expectedToken):
         if(self.current_token == expectedToken):
             self.updateCurrentToken()
         else:
-            print('errrooooooooooooooooooooooooooooor')
+            raise('Matching Error')
 
     def updateCurrentToken(self):
         self.t_index += 1
-        # print(self.t_index)
-        # print(len(self.tokens))
         if(self.t_index < len(self.tokens)):
             self.current_token = self.tokens[self.t_index]
 
     def is_identifier(self):
-        return True if self.types[self.t_index] == 'identifier' else  False
+        return True if self.types[self.t_index] == 'IDENTIFIER' else  False
     
     def is_addOp(self):
         return True if self.current_token == '+' or self.current_token == '-' else  False
@@ -172,6 +195,6 @@ class parser():
     def is_mulOp(self):
         return True if self.current_token == '*' or self.current_token == '/' else  False
     def is_comparisonOp(self):
-        return True if self.current_token == '<' or self.current_token == '=' else  False
+        return True if self.current_token == '<' or self.current_token == '=' or self.current_token == '>' else  False
     def is_semi_column(self):
         return True if self.current_token == ';' else False    
